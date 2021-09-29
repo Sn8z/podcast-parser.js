@@ -1,0 +1,31 @@
+{
+	"name": "@sn8z/podcast-parser",
+	"version": "1.0.0",
+	"description": "A podcast feed parser written in Typescript!",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"files": [
+		"/dist"
+	],
+	"scripts": {
+		"test": "mocha -r ts-node/register tests/**/*.spec.ts"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Sn8z/podcast-parser.js.git"
+	},
+	"author": "Marcus Sneitz <marcus.sneitz@gmail.com>",
+	"license": "GPL-3.0",
+	"bugs": {
+		"url": "https://github.com/Sn8z/podcast-parser.js/issues"
+	},
+	"homepage": "https://github.com/Sn8z/podcast-parser.js#readme",
+	"devDependencies": {
+		"@types/chai": "^4.2.22",
+		"@types/mocha": "^9.0.0",
+		"chai": "^4.3.4",
+		"mocha": "^9.1.2",
+		"ts-node": "^10.2.1",
+		"typescript": "^4.4.3"
+	}
+}
