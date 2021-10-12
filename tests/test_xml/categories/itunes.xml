@@ -1,0 +1,37 @@
+<rss xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" version="2.0">
+  <channel>
+    <title>Test</title>
+    <link>www.google.com</link>
+  	<language>se-se</language>
+  	<copyright>sn8z</copyright>
+  	<itunes:subtitle>sn8z test</itunes:subtitle>
+  	<itunes:author>sn8z</itunes:author>
+  	<itunes:summary>sn8z test feed</itunes:summary>
+  	<itunes:owner>
+    	<itunes:name>marcus sneitz</itunes:name>
+    	<itunes:email>marcus.sneitz@gmail.com</itunes:email>
+  	</itunes:owner>
+  	<itunes:image href="www.test.com"/>
+  	<itunes:category>Test1</itunes:category>
+  	<itunes:category text="Test2"/>
+  	<itunes:category text="Test3"/>
+		<itunes:category text="MainCategory">
+		  <itunes:category text="SubCategory1"/>
+		  <itunes:category text="SubCategory2"/>
+		  <itunes:category text="SubCategory3"/>
+		</itunes:category>
+  	<item>
+    	<title><img src="www.test.com"/>
+				sn8z
+    	</title>
+    	<itunes:author>sn8z</itunes:author>
+    	<itunes:subtitle>sn8z</itunes:subtitle>
+    	<itunes:summary>sn8z</itunes:summary>
+    	<itunes:image href="sn8z"/>
+    	<enclosure url="sn8z" length="60" type="audio/mpeg"/>
+    	<guid>sn8z</guid>
+    	<pubDate></pubDate>
+    	<itunes:duration>60</itunes:duration>
+  	</item>
+	</channel>
+</rss>
