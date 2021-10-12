@@ -1,5 +1,4 @@
 name: Tests
-description: A GitHub Action to run tests on push and PRs on the main branch
 
 on:
   push:
