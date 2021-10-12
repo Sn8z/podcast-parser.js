@@ -1,0 +1,37 @@
+<rss xmlns:googleplay="http://www.googleplay.com/dtds/podcast-1.0.dtd" version="2.0">
+  <channel>
+    <title>Test</title>
+    <link>www.google.com</link>
+  	<language>se-se</language>
+  	<copyright>sn8z</copyright>
+  	<googleplay:subtitle>sn8z test</googleplay:subtitle>
+  	<googleplay:author>sn8z</googleplay:author>
+  	<googleplay:summary>sn8z test feed</googleplay:summary>
+  	<googleplay:owner>
+    	<googleplay:name>marcus sneitz</googleplay:name>
+    	<googleplay:email>marcus.sneitz@gmail.com</googleplay:email>
+  	</googleplay:owner>
+  	<googleplay:image href="www.test.com"/>
+  	<googleplay:category>GTest1</googleplay:category>
+  	<googleplay:category text="GTest2"/>
+  	<googleplay:category text="GTest3"/>
+		<googleplay:category text="GMainCategory">
+		  <googleplay:category text="GSubCategory1"/>
+		  <googleplay:category text="GSubCategory2"/>
+		  <googleplay:category text="GSubCategory3"/>
+		</googleplay:category>
+  	<item>
+    	<title><img src="www.test.com"/>
+				sn8z
+    	</title>
+    	<googleplay:author>sn8z</googleplay:author>
+    	<googleplay:subtitle>sn8z</googleplay:subtitle>
+    	<googleplay:summary>sn8z</googleplay:summary>
+    	<googleplay:image href="sn8z"/>
+    	<enclosure url="sn8z" length="60" type="audio/mpeg"/>
+    	<guid>sn8z</guid>
+    	<pubDate></pubDate>
+    	<googleplay:duration>60</googleplay:duration>
+  	</item>
+	</channel>
+</rss>
