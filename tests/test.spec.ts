@@ -13,7 +13,7 @@ describe("Fetch and parse AVICII feed", () => {
   it("should return data", async () => {
     const result = await getPodcastFeedFromURL(AVICII_FEED);
     expect(result).to.exist;
-    expect(result.title).to.equal("AVICII FM");
+    expect(result.title).to.equal("A");
     expect(result.subtitle).to.equal("AVICII FM");
     expect(result.owner.name).to.equal("Avicii");
     expect(result.owner.email).to.equal("legal@avicii.com");
