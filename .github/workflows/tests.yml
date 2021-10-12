@@ -30,7 +30,7 @@ jobs:
         run: rm -rf node_modules
       - name: Removing old node_modules on Windows
         if: runner.os == 'Windows'
-        run: rm node_modules -r -f
+        run: rm node_modules -Recurse -Force
       - name: Running yarn install
         run: yarn install --frozen-lockfile
       - name: Running tests
