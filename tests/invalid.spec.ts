@@ -1,7 +1,7 @@
 import { readFileSync } from "fs";
 import { join } from "path";
 import { getPodcastFeed } from "../src/index";
-import { expect, should } from "chai";
+import { expect } from "chai";
 import "mocha";
 
 //local xml test feeds
