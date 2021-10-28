@@ -1,10 +1,13 @@
 import { fetch } from "cross-fetch";
 import { parse, validate } from "fast-xml-parser";
 import { Podcast, Episode } from "./podcast-interface";
+import { escape } from "he";
 
 const parseOptions = {
   ignoreAttributes: false,
   attributeNamePrefix: "",
+  attrValueProcessor: (val, aName) => escape(val, { isAttributeValue: true }),
+  tagValueProcessor: (val, tName) => escape(val),
 };
 
 export const getPodcastFeedFromURL = async (url: string) => {
