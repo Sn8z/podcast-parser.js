@@ -1,139 +1,155 @@
 import { fetch } from "cross-fetch";
 import { parse, validate } from "fast-xml-parser";
 import { Podcast, Episode } from "./podcast-interface";
+import { escape } from "he";
 
 const parseOptions = {
   ignoreAttributes: false,
   attributeNamePrefix: "",
+  attrValueProcessor: (val, aName) => escape(val, { isAttributeValue: true }),
+  tagValueProcessor: (val, tName) => escape(val),
 };
 
 export const getPodcastFeedFromURL = async (url: string) => {
   const xml = await fetch(url).then((response) => response.text());
-  return getPodcastFeed(xml);
+  return getPodcastFeed(xml, url);
 };
 
-export const getPodcastFeed = (xml: string) => {
+export const getPodcastFeed = (xml: string, url: string = "") => {
   let podcast: Podcast = {};
-  if (validate(xml)) {
-    const feedObject = parse(xml, parseOptions).rss.channel;
 
-    // Collect metadata
-    podcast.title = feedObject["title"] || "";
-    podcast.subtitle =
-      feedObject["subtitle"] || feedObject["itunes:subtitle"] || "";
-    podcast.website = feedObject["link"] || "";
-    podcast.lastUpdated = feedObject["lastBuildDate"] || "";
-    podcast.description =
-      feedObject["googleplay:description"] ||
-      feedObject["itunes:summary"] ||
-      feedObject["description"] ||
-      "";
-    podcast.language = feedObject["language"] || "";
-    podcast.copyright = feedObject["copyright"] || "";
+  //Validate XML
+  const validation = validate(xml);
+  if (validation !== true) {
+    throw new Error(validation.err.msg);
+  }
 
-    //Getting the owner information
-    podcast.owner = {
-      name: feedObject["itunes:owner"]
-        ? feedObject["itunes:owner"]["itunes:name"]
-        : "" || feedObject["googleplay:owner"]
-        ? feedObject["googleplay:owner"]["googleplay:name"]
-        : "" || "",
-      email: feedObject["itunes:owner"]
-        ? feedObject["itunes:owner"]["itunes:email"]
-        : "" || feedObject["googleplay:owner"]
-        ? feedObject["googleplay:owner"]["googleplay:email"]
-        : "" || "",
-    };
+  //Parse xml into an object
+  const feedObject = parse(xml, parseOptions).rss.channel;
 
-    podcast.author =
-      feedObject["googleplay:author"] || feedObject["itunes:author"] || "";
-    podcast.funding = feedObject["funding"] || "";
+  //Check for new feed
+  if (feedObject["itunes:new-feed-url"]) {
+    const newFeed = feedObject["itunes:new-feed-url"];
+    if (newFeed !== url) {
+      return getPodcastFeedFromURL(newFeed);
+    }
+  }
 
-    //Check if podcast contains explicit content
-    podcast.explicit = feedObject["googleplay:explicit"]
-      ? isExplicit(feedObject["googleplay:explicit"])
-      : feedObject["itunes:explicit"]
-      ? isExplicit(feedObject["itunes:explicit"])
-      : false;
-    //Try to get the correct image for the podcast
-    if (feedObject["googleplay:image"]) {
-      podcast.image = feedObject["googleplay:image"].href;
-    } else if (feedObject["itunes:image"]) {
-      podcast.image = feedObject["itunes:image"].href;
-    } else if (feedObject["image"]) {
-      podcast.image = feedObject["image"]["url"];
+  // Collect metadata
+  podcast.title = feedObject["title"] || "";
+  podcast.subtitle =
+    feedObject["subtitle"] || feedObject["itunes:subtitle"] || "";
+  podcast.website = feedObject["link"] || "";
+  podcast.lastUpdated = feedObject["lastBuildDate"] || "";
+  podcast.description =
+    feedObject["googleplay:description"] ||
+    feedObject["itunes:summary"] ||
+    feedObject["description"] ||
+    "";
+  podcast.language = feedObject["language"] || "";
+  podcast.copyright = feedObject["copyright"] || "";
+
+  //Getting the owner information
+  podcast.owner = {
+    name: feedObject["itunes:owner"]
+      ? feedObject["itunes:owner"]["itunes:name"]
+      : "" || feedObject["googleplay:owner"]
+      ? feedObject["googleplay:owner"]["googleplay:name"]
+      : "" || "",
+    email: feedObject["itunes:owner"]
+      ? feedObject["itunes:owner"]["itunes:email"]
+      : "" || feedObject["googleplay:owner"]
+      ? feedObject["googleplay:owner"]["googleplay:email"]
+      : "" || "",
+  };
+
+  podcast.author =
+    feedObject["googleplay:author"] || feedObject["itunes:author"] || "";
+  podcast.funding = feedObject["funding"] || "";
+
+  //Check if podcast contains explicit content
+  podcast.explicit = feedObject["googleplay:explicit"]
+    ? isExplicit(feedObject["googleplay:explicit"])
+    : feedObject["itunes:explicit"]
+    ? isExplicit(feedObject["itunes:explicit"])
+    : false;
+  //Try to get the correct image for the podcast
+  if (feedObject["googleplay:image"]) {
+    podcast.image = feedObject["googleplay:image"].href;
+  } else if (feedObject["itunes:image"]) {
+    podcast.image = feedObject["itunes:image"].href;
+  } else if (feedObject["image"]) {
+    podcast.image = feedObject["image"]["url"];
+  } else {
+    podcast.image = "";
+  }
+
+  //Get categories
+  let categories = [];
+
+  const getSubCategories = (subc: any) => {
+    if (subc && Array.isArray(subc)) {
+      return subc.map((c) => {
+        return c.text || c || "";
+      });
+    } else if (subc) {
+      return [subc.text || subc || ""];
     } else {
-      podcast.image = "";
+      return [];
     }
+  };
 
-    //Get categories
-    let categories = [];
-
-    const getSubCategories = (subc: any) => {
-      if (subc && Array.isArray(subc)) {
-        return subc.map((c) => {
-          return c.text || c || "";
-        });
-      } else if (subc) {
-        return [subc.text || subc || ""];
-      } else {
-        return [];
-      }
-    };
-
-    const getCategory = (tag: string) => {
-      if (feedObject[tag] && Array.isArray(feedObject[tag])) {
-        categories = feedObject[tag].map((category) => {
-          return {
-            category: category.text || category || "",
-            subcategory: getSubCategories(category[tag]),
-          };
-        });
-      } else if (feedObject[tag]) {
-        categories.push({
-          category: feedObject[tag].text || feedObject[tag] || "",
-          subcategory: getSubCategories(feedObject[tag][tag]),
-        });
-      }
-      podcast.category = categories;
-    };
-
-    if (feedObject["googleplay:category"]) {
-      getCategory("googleplay:category");
-    } else if (feedObject["itunes:category"]) {
-      getCategory("itunes:category");
-    }
-
-    //Getting episodes info
-    podcast.episodes = [];
-
-    if (Array.isArray(feedObject["item"])) {
-      feedObject["item"].forEach((rawEpisode) => {
-        let episode: Episode = {};
-        episode.title = rawEpisode["title"] || "";
-        episode.description =
-          rawEpisode["description"] ||
-          rawEpisode["googleplay:description"] ||
-          rawEpisode["itunes:summary"] ||
-          "";
-        episode.duration = rawEpisode["itunes:duration"] || 0;
-        episode.explicit =
-          isExplicit(rawEpisode["googleplay:explicit"]) ||
-          isExplicit(rawEpisode["itunes:explicit"]) ||
-          false;
-        episode.audio = {
-          url: rawEpisode["enclosure"]["url"] || "",
-          type: rawEpisode["enclosure"]["type"] || "",
-          size: rawEpisode["enclosure"]["size"] || 0,
+  const getCategory = (tag: string) => {
+    if (feedObject[tag] && Array.isArray(feedObject[tag])) {
+      categories = feedObject[tag].map((category) => {
+        return {
+          category: category.text || category || "",
+          subcategory: getSubCategories(category[tag]),
         };
-        episode.published = rawEpisode["pubDate"] || "";
-        episode.guid =
-          rawEpisode["guid"] || rawEpisode["enclosure"]["url"] || "";
-        episode.block =
-          rawEpisode["googleplay:block"] || rawEpisode["itunes:block"] || false;
-        podcast.episodes.push(episode);
+      });
+    } else if (feedObject[tag]) {
+      categories.push({
+        category: feedObject[tag].text || feedObject[tag] || "",
+        subcategory: getSubCategories(feedObject[tag][tag]),
       });
     }
+    podcast.category = categories;
+  };
+
+  if (feedObject["googleplay:category"]) {
+    getCategory("googleplay:category");
+  } else if (feedObject["itunes:category"]) {
+    getCategory("itunes:category");
+  }
+
+  //Getting episodes info
+  podcast.episodes = [];
+
+  if (Array.isArray(feedObject["item"])) {
+    feedObject["item"].forEach((rawEpisode) => {
+      let episode: Episode = {};
+      episode.title = rawEpisode["title"] || "";
+      episode.description =
+        rawEpisode["description"] ||
+        rawEpisode["googleplay:description"] ||
+        rawEpisode["itunes:summary"] ||
+        "";
+      episode.duration = rawEpisode["itunes:duration"] || 0;
+      episode.explicit =
+        isExplicit(rawEpisode["googleplay:explicit"]) ||
+        isExplicit(rawEpisode["itunes:explicit"]) ||
+        false;
+      episode.audio = {
+        url: rawEpisode["enclosure"]["url"] || "",
+        type: rawEpisode["enclosure"]["type"] || "",
+        size: rawEpisode["enclosure"]["size"] || 0,
+      };
+      episode.published = rawEpisode["pubDate"] || "";
+      episode.guid = rawEpisode["guid"] || rawEpisode["enclosure"]["url"] || "";
+      episode.block =
+        rawEpisode["googleplay:block"] || rawEpisode["itunes:block"] || false;
+      podcast.episodes.push(episode);
+    });
   }
   return podcast;
 };
